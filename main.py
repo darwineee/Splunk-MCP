@@ -25,6 +25,7 @@ splunk_service_instance: client.Service = None
 SPLUNK_HOST = os.getenv("SPLUNK_HOST", "localhost")
 SPLUNK_PORT = int(os.getenv("SPLUNK_PORT", 8089))
 SPLUNK_PROTOCOL = os.getenv("SPLUNK_PROTOCOL", "https")
+SPLUNK_VERIFY_SSL = os.getenv("SPLUNK_VERIFY_SSL", "false").lower() in ("true", "1", "yes")
 
 SPLUNK_TOKEN = os.getenv("SPLUNK_TOKEN")
 
@@ -38,12 +39,12 @@ def get_splunk_service() -> client.Service:
                 port=SPLUNK_PORT,
                 token=SPLUNK_TOKEN,
                 scheme=SPLUNK_PROTOCOL,
-                verify=SHOULD_USE_SSL,
+                verify=SPLUNK_VERIFY_SSL,
+                autologin=True,
             )
         else:
             SPLUNK_USERNAME = os.getenv("SPLUNK_USERNAME")
             SPLUNK_PASSWORD = os.getenv("SPLUNK_PASSWORD")
-            SHOULD_USE_SSL = SPLUNK_PROTOCOL.lower() == "https"
             if not SPLUNK_USERNAME or not SPLUNK_PASSWORD:
                 raise ValueError("SPLUNK_USERNAME and SPLUNK_PASSWORD must be set if SPLUNK_TOKEN is not provided.")
             splunk_service_instance = client.connect(
@@ -52,8 +53,11 @@ def get_splunk_service() -> client.Service:
                 username=SPLUNK_USERNAME,
                 password=SPLUNK_PASSWORD,
                 scheme=SPLUNK_PROTOCOL,
-                verify=SHOULD_USE_SSL,
+                verify=SPLUNK_VERIFY_SSL,
+                autologin=True,
             )
+    if not isinstance(splunk_service_instance, client.Service):
+        raise ValueError("No credentials provided for Splunk connection.")
     return splunk_service_instance
 
 @splunk_mcp.tool
@@ -105,7 +109,7 @@ def get_indexes() -> list:
 async def setup():
     load_dotenv()
     await splunk_mcp.run_async(
-        transport="sse",
+        transport="http",
         host="0.0.0.0",
         port=8081,
     )
