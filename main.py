@@ -73,8 +73,12 @@ def run_splunk_query(query: str, earliest_time: str = "-24h", latest_time: str =
     Returns:
         list: A list of results from the Splunk search. It may include dictionaries for each result or messages for warnings/errors.
     """
-    if not query.strip():
+    query = query.strip()
+    if not query:
         raise ValueError("Query cannot be empty.")
+    
+    if not query.startswith("search "):
+        query = "search " + query
 
     service = get_splunk_service()
     kwargs = {
