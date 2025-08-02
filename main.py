@@ -22,6 +22,8 @@ async def health_check(request: Request):
 # Do not directly use this variable. Use `get_splunk_service()` instead.
 splunk_service_instance: client.Service = None
 
+LOG_LEVEL = os.getenv("SPLUNK_MCP_LOG_LEVEL", "info").lower()
+
 SPLUNK_HOST = os.getenv("SPLUNK_HOST", "localhost")
 SPLUNK_PORT = int(os.getenv("SPLUNK_PORT", 8089))
 SPLUNK_PROTOCOL = os.getenv("SPLUNK_PROTOCOL", "https")
@@ -94,7 +96,7 @@ def run_splunk_query(query: str, earliest_time: str = "-24h", latest_time: str =
             results_list.append(result)
         elif isinstance(result, results.Message):
             # Handle messages (warnings, errors) from Splunk
-            results_list.append({"message": result.message.value,})
+            results_list.append({"message": result.message,})
 
     return results_list
 
@@ -116,6 +118,7 @@ async def setup():
         transport="http",
         host="0.0.0.0",
         port=8081,
+        log_level=LOG_LEVEL,
     )
 
 if __name__ == "__main__":
