@@ -6,10 +6,14 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from splunklib import client, results
 
+TENANT_NAME = os.getenv("TENANT_NAME", "")
+
+tenant = f"for {TENANT_NAME} tenant" if TENANT_NAME else ""
+
 splunk_mcp = FastMCP(
     name="Splunk MCP server",
-    instructions="""
-    This is a Splunk MCP server that allows an AI agent to run Splunk queries and retrieve results.
+    instructions=f"""
+    This is a Splunk MCP server {tenant} that allows an AI agent to run Splunk queries and retrieve results.
     Use the `run_splunk_query` tool to execute Splunk queries.
     Use the `get_indexes` tool to list all accessible Splunk indexes.
     """,
